@@ -24,6 +24,8 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Map;
 
 
@@ -42,7 +44,12 @@ public class JdbcUserRepository implements UserRepository {
 
     @Override
     public User save(User user) {
-        SqlParameterSource parameterSource = new BeanPropertySqlParameterSource(user);
+        MapSqlParameterSource parameterSource = new MapSqlParameterSource()
+                .addValue("loginId", user.getLoginId())
+                .addValue("password", user.getPassword())
+                .addValue("username", user.getUsername())
+                .addValue("role", user.getRole().name()); // Enum을 String으로 저장
+
         Number key = jdbcInsert.executeAndReturnKey(parameterSource);
 
         user.setId(key.longValue());
@@ -85,8 +92,12 @@ public class JdbcUserRepository implements UserRepository {
 
     @Override
     public void update(User user) {
-        String sql = "UPDATE users SET password = :password, username = :username WHERE id = :id";
-        SqlParameterSource parameterSource = new BeanPropertySqlParameterSource(user);
+        String sql = "UPDATE users SET password = :password, username = :username, role = :role WHERE id = :id";
+        MapSqlParameterSource parameterSource = new MapSqlParameterSource()
+                .addValue("password", user.getPassword())
+                .addValue("username", user.getUsername())
+                .addValue("role", user.getRole().name())
+                .addValue("id", user.getId());
         jdbcTemplate.update(sql, parameterSource);
     }
 
@@ -98,6 +109,14 @@ public class JdbcUserRepository implements UserRepository {
     }
 
     private RowMapper<User> userRowMapper() {
-        return new BeanPropertyRowMapper<>(User.class);
+        return (rs, rowNum) -> {
+            User user = new User();
+            user.setId(rs.getLong("id"));
+            user.setLoginId(rs.getString("login_id"));
+            user.setPassword(rs.getString("password"));
+            user.setUsername(rs.getString("username"));
+            user.setRole(Role.valueOf(rs.getString("role")));
+            return user;
+        };
     }
 }

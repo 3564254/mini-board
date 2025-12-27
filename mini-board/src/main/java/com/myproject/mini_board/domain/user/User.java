@@ -5,10 +5,10 @@
 //    - 예: `public class User extends BaseEntity { ... }`
 package com.myproject.mini_board.domain.user;
 
-        import com.myproject.mini_board.domain.BaseEntity;
-        import lombok.Getter;
-        import lombok.NoArgsConstructor;
-        import lombok.Setter;
+import com.myproject.mini_board.domain.BaseEntity;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter @Setter
 @NoArgsConstructor
@@ -21,16 +21,24 @@ public class User extends BaseEntity {
 
     private String username;
 
+    private Role role;
+
     public User(String loginId, String password, String username) {
         this.loginId = loginId;
         this.password = password;
         this.username = username;
+        this.role = Role.USER;
     }
 
-    public User(Long id, String loginId, String password, String username) {
+    public User(Long id, String loginId, String password, String username, Role role) {
         super(id);
         this.loginId = loginId;
         this.password = password;
         this.username = username;
+        this.role = role;
+    }
+
+    public String getRoleKey() {
+        return this.role.getKey();
     }
 }

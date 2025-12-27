@@ -1,7 +1,9 @@
 package com.myproject.mini_board.service;
 
+import com.myproject.mini_board.domain.user.Role;
 import com.myproject.mini_board.domain.user.User;
 import com.myproject.mini_board.domain.user.UserRepository;
+import com.myproject.mini_board.global.exception.DifferentUserException;
 import com.myproject.mini_board.web.dto.user.UserLoginDTO;
 import com.myproject.mini_board.web.dto.user.UserRegisterDTO;
 import com.myproject.mini_board.web.dto.user.UserRequestDTO;
@@ -31,7 +33,12 @@ public class UserService {
         }
         String encodedPassword = passwordEncoder.encode(registerDTO.getPassword());
         log.info("암호화된 비밀번호: " + encodedPassword);
-        User newUser = userRepository.save(new User(registerDTO.getLoginId(), encodedPassword, registerDTO.getUsername()));
+        
+        // 회원가입 시 기본적으로 USER 권한 부여
+        User user = new User(registerDTO.getLoginId(), encodedPassword, registerDTO.getUsername());
+        user.setRole(Role.USER);
+        
+        User newUser = userRepository.save(user);
         log.info("register 완료: id={}, LoginId={}, username={}",newUser.getId(), registerDTO.getLoginId(), registerDTO.getUsername());
         return new UserResponseDTO(newUser);
     }
@@ -71,13 +78,21 @@ public class UserService {
     }
 
     @Transactional
-    public void deleteUser(Long userId) {
-        User user = userRepository.findById(userId);
-        if (user == null) {
+    public void deleteUser(Long targetUserId, Long requesterId) {
+        User targetUser = userRepository.findById(targetUserId);
+        if (targetUser == null) {
             throw new IllegalArgumentException("회원 정보가 일치하지 않습니다.");
         }
-        userRepository.delete(userId);
+
+        // 요청자가 본인이거나 관리자인 경우 삭제 가능
+        if (!targetUserId.equals(requesterId)) {
+             User requester = userRepository.findById(requesterId);
+             if (requester == null || requester.getRole() != Role.ADMIN) {
+                 throw new DifferentUserException("삭제 권한이 없습니다.");
+             }
+        }
+        
+        userRepository.delete(targetUserId);
     }
 
 }
-

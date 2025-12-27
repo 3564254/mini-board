@@ -64,7 +64,8 @@ public class UserController {
 
             session.setAttribute(SessionConst.LOGIN_USER_ID, loginUser.getId());
             session.setAttribute(SessionConst.LOGIN_USER_NAME, loginUser.getUsername());
-            log.info("세션에 회원정보 저장 loginUserId={}, loginusername={}", loginUser.getId(), loginUser.getUsername());
+            session.setAttribute(SessionConst.LOGIN_USER_ROLE, loginUser.getRole().name()); // Role 추가
+            log.info("세션에 회원정보 저장 loginUserId={}, loginusername={}, role={}", loginUser.getId(), loginUser.getUsername(), loginUser.getRole());
             return "redirect:/posts";
         } catch (IllegalArgumentException e) {
             bindingResult.reject("loginFail", e.getMessage());
@@ -103,7 +104,7 @@ public class UserController {
     public String deleteUser(@SessionAttribute(value = SessionConst.LOGIN_USER_ID, required = false) Long userId,
                              HttpSession session) {
 
-        userService.deleteUser(userId);
+        userService.deleteUser(userId, userId);
         if (session != null) session.invalidate();
 
         return "redirect:/";

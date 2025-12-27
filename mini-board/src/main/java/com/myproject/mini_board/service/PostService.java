@@ -2,6 +2,9 @@ package com.myproject.mini_board.service;
 
 import com.myproject.mini_board.domain.post.Post;
 import com.myproject.mini_board.domain.post.PostRepository;
+import com.myproject.mini_board.domain.user.Role;
+import com.myproject.mini_board.domain.user.User;
+import com.myproject.mini_board.domain.user.UserRepository;
 import com.myproject.mini_board.global.exception.DifferentUserException;
 import com.myproject.mini_board.global.exception.NotFoundException;
 import com.myproject.mini_board.web.dto.page.PageResponseDTO;
@@ -24,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PostService {
     // jdbc
     private final PostRepository postRepository;
+    private final UserRepository userRepository;
 
 
     @Transactional
@@ -96,13 +100,25 @@ public class PostService {
 
     @Transactional
     public void delete(Long id, Long userId) {
-        Post existingPost = findPostAndCheckPermission(id, userId);
+        Post existingPost = postRepository.findById(id);
+        if (existingPost == null) throw new NotFoundException("게시글을 찾을 수 없습니다. ID: " + id);
+
+        User user = userRepository.findById(userId);
+        if (user == null) throw new NotFoundException("사용자를 찾을 수 없습니다.");
+
+        // 작성자 본인이거나 관리자인 경우 삭제 가능
+        if (!existingPost.getUserId().equals(userId) && user.getRole() != Role.ADMIN) {
+            throw new DifferentUserException("권한 없음");
+        }
+        
         postRepository.delete(id);
     }
 
     private Post findPostAndCheckPermission(Long id, Long userId) {
         Post existingPost = postRepository.findById(id);
         if (existingPost == null) throw new NotFoundException("게시글을 찾을 수 없습니다. ID: " + id);
+        
+        // 수정은 작성자 본인만 가능
         if (!existingPost.getUserId().equals(userId)) throw new DifferentUserException("권한 없음");
         return existingPost;
     }

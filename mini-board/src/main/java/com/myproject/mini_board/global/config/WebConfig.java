@@ -17,7 +17,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .order(1) // 인터셉터 실행 순서 지정
                 .addPathPatterns("/**") // 모든 요청에 대해 인터셉터 적용
                 .excludePathPatterns(
-                        "/", "/posts", "/users/register", "/users/login", "/users/logout",
+                        "/", "/posts", "/posts/{postId}", "/posts/search", "/users/register", "/users/login", "/users/logout",
                         "/css/**", "/*.ico", "/error", "/js/**", "/images/**"
                 ); // 특정 경로는 인터셉터 적용에서 제외
     }

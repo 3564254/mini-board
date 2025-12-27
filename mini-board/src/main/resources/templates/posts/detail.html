@@ -90,7 +90,9 @@
 
         <th:block th:if="${session.loginUserId == post.userId}">
             <a th:href="@{/posts/{id}/edit(id=${post.id})}" class="btn btn-primary me-2">Edit</a>
+        </th:block>
 
+        <th:block th:if="${session.loginUserId == post.userId or session.loginUserRole == 'ADMIN'}">
             <form th:action="@{/posts/{id}/delete(id=${post.id})}" method="post" style="display:inline;"
                   onsubmit="return confirm('Are you sure you want to delete this post?');">
                 <button type="submit" class="btn btn-danger">Delete</button>
@@ -117,7 +119,7 @@
             <div class="d-flex justify-content-end">
                 <form th:action="@{|/posts/${post.id}/comments/${comment.id}/delete|}"
                       method="post"
-                      th:if="${session.loginUserId == comment.userId}">
+                      th:if="${session.loginUserId == comment.userId or session.loginUserRole == 'ADMIN'}">
                     <button class="btn btn-danger btn-sm">Delete</button>
                 </form>
             </div>
