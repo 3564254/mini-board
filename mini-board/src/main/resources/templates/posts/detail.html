@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Mini Board</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">Mini Board</a>
+
+            <div class="d-flex align-items-center">
+                <div th:if="${session.loginUserId == null}">
+                    <a href="/users/login" class="btn btn-outline-light btn-sm me-2">Login</a>
+                    <a href="/users/register" class="btn btn-primary btn-sm">Sign Up</a>
+                </div>
+
+                <div th:if="${session.loginUserId != null}" class="d-flex align-items-center">
+                    <span class="text-light me-3" th:text="|Hello, ${session.loginusername}!|">User</span>
+
+                    <form action="/users/logout" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm text-light border-light">Logout</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-bold fs-5" th:text="${post.title}">Post Title</span>
+
+            <div class="text-end">
+                <span class="d-block text-muted small" th:text="|Written by ${post.username}|">Author</span>
+
+                <span class="text-muted" style="font-size: 0.8rem;"
+                      th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">Date</span>
+
+                <div th:if="${post.updatedAt != null and post.updatedAt.isAfter(post.createdAt)}">
+                     <span class="text-info" style="font-size: 0.75rem;"
+                           th:text="|Updated: ${#temporals.format(post.updatedAt, 'yyyy-MM-dd HH:mm')}|">Update</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <p class="card-text" th:text="${post.content}" style="white-space: pre-wrap;">Post Content</p>
+
+            <hr class="my-4">
+            <div class="d-flex justify-content-center align-items-center mt-4 gap-3">
+
+                <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2"
+                        th:onclick="|votePost(${post.id}, 'LIKE')|"> <span>👍 좋아요</span>
+                    <span class="badge bg-primary rounded-pill" th:text="${post.likeCount}">0</span>
+                </button>
+
+                <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-2"
+                        th:onclick="|votePost(${post.id}, 'DISLIKE')|">
+                    <span>👎 싫어요</span>
+                    <span class="badge bg-danger rounded-pill" th:text="${post.dislikeCount}">0</span>
+                </button>
+            </div>
+
+            <script>
+                function votePost(postId, voteType) {
+                    // 서버에 몰래 요청 보내기 (화면 이동 X)
+                    fetch(`/posts/${postId}/vote?type=${voteType}`, {
+                        method: 'POST'
+                    })
+                    .then(response => response.text()) // 서버 응답 받기
+                    .then(result => {
+                        if (result === "login_needed") {
+                            alert("로그인이 필요합니다.");
+                            location.href = "/users/login";
+                        } else if (result === "ok") {
+                            // 투표 성공 시 화면만 새로고침 (숫자 갱신됨, 히스토리 안 남음!)
+                            location.reload();
+                        }
+                    })
+                    .catch(error => alert("오류가 발생했습니다."));
+                }
+            </script>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end mt-3">
+
+        <th:block th:if="${session.loginUserId == post.userId}">
+            <a th:href="@{/posts/{id}/edit(id=${post.id})}" class="btn btn-primary me-2">Edit</a>
+
+            <form th:action="@{/posts/{id}/delete(id=${post.id})}" method="post" style="display:inline;"
+                  onsubmit="return confirm('Are you sure you want to delete this post?');">
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        </th:block>
+
+        <a href="/posts" class="btn btn-secondary ms-2">Back to List</a>
+    </div>
+
+    <div class="mt-5 mb-5">
+        <h4>Comments</h4>
+        <hr>
+
+        <div th:each="comment : ${commentList}" class="mb-3 p-3 border rounded bg-light">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold" th:text="${comment.username}">작성자</span>
+
+                <span class="text-muted small"
+                      th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01</span>
+            </div>
+
+            <p class="mb-2" th:text="${comment.content}">댓글 내용</p>
+
+            <div class="d-flex justify-content-end">
+                <form th:action="@{|/posts/${post.id}/comments/${comment.id}/delete|}"
+                      method="post"
+                      th:if="${session.loginUserId == comment.userId}">
+                    <button class="btn btn-danger btn-sm">Delete</button>
+                </form>
+            </div>
+        </div>
+
+        <div th:if="${session.loginUserId != null}">
+            <form th:action="@{|/posts/${post.id}/comments|}" method="post">
+                <textarea name="content"
+                          class="form-control mb-2"
+                          placeholder="Write a comment..."
+                          required></textarea>
+                <button type="submit" class="btn btn-primary">Add Comment</button>
+            </form>
+        </div>
+
+        <div th:if="${session.loginUserId == null}" class="text-muted">
+            로그인 후 댓글을 작성할 수 있습니다.
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

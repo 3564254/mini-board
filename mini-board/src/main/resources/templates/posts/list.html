@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mini Board</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body { background-color: #f8f9fa; }
+        .table-container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 30px; }
+        .table th { background-color: #f1f3f5; border-top: none; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/posts">Mini Board</a>
+        <div class="d-flex align-items-center">
+            <div th:if="${session.loginUserId == null}">
+                <a href="/users/login" class="btn btn-outline-light btn-sm me-2">Login</a>
+                <a href="/users/register" class="btn btn-primary btn-sm">Sign Up</a>
+            </div>
+            <div th:if="${session.loginUserId != null}" class="d-flex align-items-center">
+                <span class="text-light me-3" th:text="|Hello, ${session.loginusername}!|">User</span>
+                <form action="/users/logout" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm text-light border-light">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div th:if="${param.status}" class="alert alert-success alert-dismissible fade show" role="alert">
+        처리가 완료되었습니다.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold">Community Posts</h2>
+        <a href="/posts/new" class="btn btn-primary shadow-sm">+ Write Post</a>
+    </div>
+
+    <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-body bg-light rounded">
+            <form action="/posts/search" method="get" class="row g-2 justify-content-center align-items-center">
+
+                <div class="col-auto">
+                    <select name="search_target" class="form-select">
+                        <option value="TITLE" th:selected="${search_target == 'TITLE'}">제목</option>
+                        <option value="CONTENT" th:selected="${search_target == 'CONTENT'}">내용</option>
+                        <option value="TITLE_CONTENT" th:selected="${search_target == 'TITLE_CONTENT'}">제목+내용</option>
+                        <option value="USERNAME" th:selected="${search_target == 'USERNAME'}">작성자</option>
+                    </select>
+                </div>
+
+                <div class="col-auto">
+                    <input type="text" name="search_keyword" class="form-control"
+                           placeholder="검색어를 입력하세요"
+                           th:value="${search_keyword}" style="width: 300px;">
+                </div>
+
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-secondary">검색</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="table table-hover align-middle">
+            <thead>
+            <tr>
+                <th style="width: 60%">Title</th>
+                <th style="width: 25%">Author</th>
+                <th style="width: 15%" class="text-center">Likes</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="post : ${posts}"
+                th:onclick="|location.href='@{/posts/{id}(id=${post.id})}'|"
+                style="cursor: pointer;">
+                <td><span th:text="${post.title}" class="fw-bold text-dark">Title</span></td>
+                <td th:text="${post.username}">User</td>
+                <td class="text-center">
+                    <span class="text-primary small">👍</span>
+                    <span th:text="${post.likeCount}" class="fw-bold text-secondary">0</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <nav aria-label="Page navigation" th:if="${pageInfo.totalPages > 0}"
+             th:with="baseUrl=${search_keyword != null ? '/posts/search' : '/posts'}">
+
+            <ul class="pagination justify-content-center">
+
+                <li class="page-item" th:classappend="${pageInfo.currentPage == 1} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{${baseUrl}(page=1, search_keyword=${search_keyword}, search_target=${search_target})}">&laquo;</a>
+                </li>
+                <li class="page-item" th:classappend="${pageInfo.currentPage == 1} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{${baseUrl}(page=${pageInfo.currentPage - 1}, search_keyword=${search_keyword}, search_target=${search_target})}">Prev</a>
+                </li>
+
+                <li class="page-item"
+                    th:each="num : ${#numbers.sequence(pageInfo.startPage, pageInfo.endPage)}"
+                    th:classappend="${num == pageInfo.currentPage} ? 'active'">
+                    <a class="page-link"
+                       th:href="@{${baseUrl}(page=${num}, search_keyword=${search_keyword}, search_target=${search_target})}"
+                       th:text="${num}">1</a>
+                </li>
+
+                <li class="page-item" th:classappend="${pageInfo.currentPage == pageInfo.totalPages} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{${baseUrl}(page=${pageInfo.currentPage + 1}, search_keyword=${search_keyword}, search_target=${search_target})}">Next</a>
+                </li>
+                <li class="page-item" th:classappend="${pageInfo.currentPage == pageInfo.totalPages} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{${baseUrl}(page=${pageInfo.totalPages}, search_keyword=${search_keyword}, search_target=${search_target})}">&raquo;</a>
+                </li>
+
+            </ul>
+        </nav>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</div>
+</body>
+</html>
