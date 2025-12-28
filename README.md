@@ -1,5 +1,4 @@
-# 📋 Mini Board (Spring Boot Community Project)
-
+# 📋 Mini Board (Spring Boot Community Project) 
 ![Java](https://img.shields.io/badge/Java-17-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
@@ -14,6 +13,7 @@ Spring Boot와 JDBC를 활용하여 개발한 **사용자 참여형 커뮤니티
 프레임워크가 제공하는 추상화된 기능(JPA, Security)에 전적으로 의존하기보다, 웹 애플리케이션의 핵심 메커니즘(세션 기반 인증, 역할 기반 인가, SQL 핸들링)을 직접 구현하며 백엔드 개발의 기반을 다지는 데 주력했습니다.
 
 ---
+접속 주소: http://3.35.209.240:8080
 
 ## 🛠 Tech Stack
 
