@@ -1,78 +1,107 @@
-# 📋 Mini Board (Spring Boot Community Project) 
-![Java](https://img.shields.io/badge/Java-17-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
-![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
-![Thymeleaf](https://img.shields.io/badge/Thymeleaf-Green?style=for-the-badge&logo=thymeleaf&logoColor=white)
+# Mini Board (Spring Boot Community Project)
 
-> **"Convenience hides complexity."**
-> 
-> 편리함 뒤에 숨겨진 원리를 이해하기 위해, **JPA와 Spring Security 없이** 순수 기술로 구현한 커뮤니티 서비스입니다.
-
-## 📖 Project Overview
-Spring Boot와 JDBC를 활용하여 개발한 **사용자 참여형 커뮤니티 게시판**입니다.
-프레임워크가 제공하는 추상화된 기능(JPA, Security)에 전적으로 의존하기보다, 웹 애플리케이션의 핵심 메커니즘(세션 기반 인증, 역할 기반 인가, SQL 핸들링)을 직접 구현하며 백엔드 개발의 기반을 다지는 데 주력했습니다.
+Java와 Spring Boot를 기반으로 구현한 **커뮤니티 게시판 웹 애플리케이션**입니다.
+JPA와 Spring Security를 사용하지 않고, **JDBC 기반 데이터 접근과 세션 기반 인증/인가를 직접 구현**하여 웹 애플리케이션의 핵심 동작 원리를 명확히 이해하는 것을 목표로 개발했습니다.
 
 ---
-접속 주소: http://3.35.209.240:8080  
-ADMIN ID: `admin1`  
-ADMIN PW: `admin1`
 
-## 🛠 Tech Stack
+## Project Overview
+
+본 프로젝트는 Spring Boot 3.x 환경에서 **게시글, 댓글, 회원 관리 기능을 제공하는 커뮤니티 서비스**입니다.
+프레임워크가 제공하는 고수준 추상화(JPA, Spring Security)에 의존하지 않고, 다음과 같은 영역을 직접 설계·구현했습니다.
+
+* JDBC 기반 SQL 처리
+* HttpSession 기반 인증
+* 인터셉터를 활용한 역할 기반 접근 제어(RBAC)
+* 서버단 권한 검증 로직
+
+이를 통해 **요청 흐름, 인증 처리, 데이터 접근 구조**를 보다 명확히 이해하고자 했습니다.
+
+---
+
+## Service Access
+
+* URL: [http://3.35.209.240:8080](http://3.35.209.240:8080)
+* ADMIN
+
+  * ID: `admin1`
+  * PW: `admin1`
+
+---
+
+## Tech Stack
 
 ### Backend
-- **Core**: Java 17, Spring Boot 3.x
-- **Web**: Spring MVC (RESTful API & SSR)
-- **Data Access**: Spring JDBC (NamedParameterJdbcTemplate) - *No ORM*
-- **Database**: MySQL 8.0
+
+* Java 17
+* Spring Boot 3.x
+* Spring MVC
+* Spring JDBC (`NamedParameterJdbcTemplate`)
+* MySQL 8.0
 
 ### Frontend
-- **Template Engine**: Thymeleaf
-- **Styling**: Bootstrap 5 (Responsive Design)
+
+* Thymeleaf
+* Bootstrap 5
 
 ---
 
-## 💡 Key Features
+## Key Features
 
-### 1. 게시글 관리 (Board)
-- **CRUD 구현**: 게시글 작성, 조회, 수정, 삭제 기능
-- **동적 검색 (Dynamic Search)**: 제목, 내용, 작성자 등 다양한 조건 조합을 `StringBuilder`로 처리하여 검색 최적화
-- **페이징 (Pagination)**: 대량의 데이터 처리를 고려하여 `LIMIT`, `OFFSET` 기반의 DB 페이징 구현
+### 게시글 관리 (Board)
 
-### 2. 회원 시스템 및 권한 관리 (Auth & RBAC)
-- **자체 인증/인가 구현**: `Spring Security` 없이 `Interceptor`와 `HttpSession`을 활용하여 보안 로직 설계
-- **역할 기반 접근 제어 (RBAC)**: 사용자 유형을 3단계로 분류하여 철저한 권한 관리 적용
-    - **`ADMIN`**: 전체 게시글/댓글 관리 및 회원 관리 권한 (시스템 관리자)
-    - **`USER`**: 게시글 작성, 본인 게시글 수정/삭제, 댓글 작성 권한 (일반 회원)
-    - **`GUEST`**: 게시글/댓글 단순 조회만 가능 (비로그인 사용자)
-- **보안**: `BCryptPasswordEncoder`를 활용한 비밀번호 단방향 암호화
+* 게시글 작성, 조회, 수정, 삭제 (CRUD)
+* 검색 조건(제목, 내용, 작성자)을 조합한 **동적 검색 기능**
+* `LIMIT / OFFSET` 기반 페이징 처리로 대량 데이터 대응
 
-### 3. 상호작용 기능 (Interaction)
-- **계층형 댓글**: 게시글에 대한 댓글 작성 및 삭제 기능
-- **작성자 검증**: 서버단에서 세션 정보와 작성자를 대조하여 불법적인 수정/삭제 요청 차단
+### 회원 인증 및 권한 관리 (Auth & RBAC)
 
----
+* Spring Security 미사용
 
-## 🔍 Technical Deep Dive
+* `HttpSession` 기반 로그인 처리
 
-### 1. Why JDBC, Not JPA? (SQL 주도 개발)
-ORM의 편리함보다는 **SQL 작성 능력과 데이터베이스 접근 비용에 대한 이해**를 우선시했습니다.
-- **명시적 쿼리 제어**: `NamedParameterJdbcTemplate`을 사용하여 SQL 가독성을 높이고, 파라미터 바인딩을 명확히 했습니다.
-- **N+1 문제 원천 차단**: 연관 데이터 조회 시 `JOIN` 쿼리를 직접 작성하여 불필요한 네트워크 통신을 최소화했습니다.
+* `Interceptor`를 활용한 인증 및 권한 검증
 
-### 2. Spring Security 없는 권한 관리 (Role-Based Authorization)
-블랙박스처럼 동작하는 Security 필터 체인 대신, Spring MVC의 인터셉터를 활용하여 권한 체크 로직을 직접 구축했습니다.
-- **Role 분리 전략**: DB 내 `role` 컬럼(`ADMIN`, `USER`, `GUEST`)을 기준으로 요청 권한을 식별합니다.
-- **Interceptor 활용**:
-    - `LoginCheckInterceptor`: 인증 여부(세션 존재 유무) 확인
-    - `RoleCheckInterceptor`: 특정 URL(예: `/admin/**`) 접근 시 사용자 Role을 검증하여 권한이 없으면 접근 거부(`403 Forbidden`) 처리
+* 역할(Role)에 따른 접근 제어
 
-### 3. 견고한 아키텍처 설계
-- **계층 분리**: `Controller` (요청 처리) → `Service` (비즈니스 로직) → `Repository` (DB 접근)의 역할 분리.
-- **DTO 패턴**: Entity가 View에 직접 노출되는 것을 방지하기 위해 `RequestDTO`, `ResponseDTO`를 철저히 분리하여 데이터 무결성을 보장했습니다.
+  * `ADMIN`: 게시글·댓글 관리, 회원 관리
+  * `USER`: 게시글 및 댓글 작성, 본인 글 수정/삭제
+  * `GUEST`: 조회 전용 접근
+
+* 비밀번호는 `BCryptPasswordEncoder`를 사용해 단방향 암호화
+
+### 댓글 기능
+
+* 게시글별 댓글 작성 및 삭제
+* 서버단에서 작성자 검증을 수행하여 비인가 요청 차단
 
 ---
 
-## 📊 ERD (Entity Relationship Diagram)
+## Technical Decisions
+
+### JDBC 기반 데이터 접근
+
+ORM 대신 JDBC를 선택하여 SQL 실행 흐름과 데이터 조회 비용을 명확히 제어했습니다.
+
+* `NamedParameterJdbcTemplate`을 사용해 SQL 가독성과 파라미터 바인딩 안정성 확보
+* 연관 데이터 조회 시 `JOIN` 쿼리를 직접 작성하여 N+1 문제 방지
+
+### 인증·인가 구조
+
+Spring Security의 필터 체인 대신, MVC 인터셉터를 사용해 요청 흐름을 단순화했습니다.
+
+* `LoginCheckInterceptor`: 인증 여부 검증
+* `RoleCheckInterceptor`: URL 패턴 기준 권한 검증 (`/admin/**` 등)
+* 권한 부족 시 `403 Forbidden` 응답 처리
+
+### 계층 분리 및 DTO 설계
+
+* Controller / Service / Repository 역할 분리
+* Request DTO와 Response DTO를 분리하여 View와 내부 로직 간 의존성 최소화
+
+---
+
+## ERD
 
 ```mermaid
 erDiagram
@@ -82,10 +111,10 @@ erDiagram
 
     USERS {
         bigint id PK
-        varchar login_id UK "Unique Login ID"
+        varchar login_id UK
         varchar password
         varchar username
-        varchar role "ADMIN, USER, GUEST"
+        varchar role
     }
 
     POSTS {
@@ -103,3 +132,4 @@ erDiagram
         bigint user_id FK
         varchar content
     }
+```
