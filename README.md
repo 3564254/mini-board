@@ -1,29 +1,26 @@
 # Mini Board (Spring Boot Community Project)
 
-Java와 Spring Boot를 기반으로 구현한 **커뮤니티 게시판 웹 애플리케이션**입니다.
-JPA와 Spring Security를 사용하지 않고, **JDBC 기반 데이터 접근과 세션 기반 인증/인가를 직접 구현**하여 웹 애플리케이션의 핵심 동작 원리를 명확히 이해하는 것을 목표로 개발했습니다.
+Java와 Spring Boot 기반의 커뮤니티 게시판 웹 애플리케이션. 
+JPA와 Spring Security 같은 고수준 추상화 기술에 의존하지 않고, **JDBC를 이용한 데이터 접근과 세션 기반 인증/인가 로직을 직접 구현**하며 웹 애플리케이션의 핵심 동작 원리를 깊이 있게 학습하고자 기획.
 
 ---
 
 ## Project Overview
 
-본 프로젝트는 Spring Boot 3.x 환경에서 **게시글, 댓글, 회원 관리 기능을 제공하는 커뮤니티 서비스**입니다.
-프레임워크가 제공하는 고수준 추상화(JPA, Spring Security)에 의존하지 않고, 다음과 같은 영역을 직접 설계·구현했습니다.
+Spring Boot 3.x 환경에서 동작하는 게시글, 댓글, 회원 관리 중심의 커뮤니티 서비스. 
+프레임워크의 기본 환경 위에서 아래 영역들을 직접 설계하고 통제하며 백엔드 구조에 대한 이해도 향상에 집중.
 
-* JDBC 기반 SQL 처리
-* HttpSession 기반 인증
-* 인터셉터를 활용한 역할 기반 접근 제어(RBAC)
-* 서버단 권한 검증 로직
-
-이를 통해 **요청 흐름, 인증 처리, 데이터 접근 구조**를 보다 명확히 이해하고자 했습니다.
+* JDBC 기반 SQL 매핑 및 데이터 처리
+* `HttpSession`을 활용한 로그인 세션 관리
+* `Interceptor` 기반의 역할 단위(Role-based) 접근 제어
+* 서버사이드 데이터 및 권한 검증
 
 ---
 
 ## Service Access
 
-* URL: (중단)
-* ADMIN
-
+* **URL:** (서비스 중단)
+* **ADMIN 계정**
   * ID: `admin1`
   * PW: `admin1`
 
@@ -32,7 +29,6 @@ JPA와 Spring Security를 사용하지 않고, **JDBC 기반 데이터 접근과
 ## Tech Stack
 
 ### Backend
-
 * Java 17
 * Spring Boot 3.x
 * Spring MVC
@@ -40,7 +36,6 @@ JPA와 Spring Security를 사용하지 않고, **JDBC 기반 데이터 접근과
 * MySQL 8.0
 
 ### Frontend
-
 * Thymeleaf
 * Bootstrap 5
 
@@ -48,56 +43,40 @@ JPA와 Spring Security를 사용하지 않고, **JDBC 기반 데이터 접근과
 
 ## Key Features
 
-### 게시글 관리 (Board)
+### 1. 게시판 (Board)
+* **CRUD:** 게시글 및 댓글 작성, 조회, 수정, 삭제 
+* **동적 검색:** 제목, 내용, 작성자 등 다양한 조건을 조합한 다중 검색 지원
+* **페이징 처리:** `LIMIT / OFFSET` 쿼리를 활용해 대량 데이터 조회 시 성능 최적화
 
-* 게시글 작성, 조회, 수정, 삭제 (CRUD)
-* 검색 조건(제목, 내용, 작성자)을 조합한 **동적 검색 기능**
-* `LIMIT / OFFSET` 기반 페이징 처리로 대량 데이터 대응
+### 2. 인증 및 권한 관리 (Auth & RBAC)
+* **자체 세션 관리:** Spring Security 필터 대신 `HttpSession`을 이용한 로그인 구현
+* **역할 기반 접근 제어:** MVC `Interceptor`를 통한 권한 검증
+  * `ADMIN`: 전체 게시글/댓글 및 회원 관리
+  * `USER`: 일반 글 작성 및 본인 소유의 데이터 수정/삭제
+  * `GUEST`: 읽기 전용 접근
+* **보안:** `BCryptPasswordEncoder`를 적용한 비밀번호 단방향 암호화
 
-### 회원 인증 및 권한 관리 (Auth & RBAC)
-
-* Spring Security 미사용
-
-* `HttpSession` 기반 로그인 처리
-
-* `Interceptor`를 활용한 인증 및 권한 검증
-
-* 역할(Role)에 따른 접근 제어
-
-  * `ADMIN`: 게시글·댓글 관리, 회원 관리
-  * `USER`: 게시글 및 댓글 작성, 본인 글 수정/삭제
-  * `GUEST`: 조회 전용 접근
-
-* 비밀번호는 `BCryptPasswordEncoder`를 사용해 단방향 암호화
-
-### 댓글 기능
-
-* 게시글별 댓글 작성 및 삭제
-* 서버단에서 작성자 검증을 수행하여 비인가 요청 차단
+### 3. 댓글 시스템
+* 게시글 종속적인 댓글 작성 및 삭제 기능
+* 비정상적인 접근(타인의 댓글 삭제 요청 등)을 방지하기 위한 서버단 검증 로직 적용
 
 ---
 
 ## Technical Decisions
 
-### JDBC 기반 데이터 접근
+### JDBC를 활용한 데이터 접근 제어
+ORM 기술 대신 Spring JDBC를 채택하여 쿼리 실행 흐름을 직관적으로 파악하고 데이터베이스 접근 비용을 직접 제어.
+* `NamedParameterJdbcTemplate` 활용으로 SQL 가독성 향상 및 파라미터 바인딩 오류 방지
+* 복잡한 연관 데이터 조회 시 직접 `JOIN` 쿼리를 작성하여 N+1 이슈 원천 차단
 
-ORM 대신 JDBC를 선택하여 SQL 실행 흐름과 데이터 조회 비용을 명확히 제어했습니다.
+### Interceptor 기반의 단순화된 인증·인가
+복잡한 Security 필터 체인 대신 Spring MVC의 인터셉터를 활용해 요청 흐름을 단순하고 명확하게 설계.
+* `LoginCheckInterceptor`: 전역적인 로그인 상태 검증
+* `RoleCheckInterceptor`: URL 패턴(`/admin/**` 등)에 따른 인가 처리 및 권한 부족 시 `403 Forbidden` 응답 제어
 
-* `NamedParameterJdbcTemplate`을 사용해 SQL 가독성과 파라미터 바인딩 안정성 확보
-* 연관 데이터 조회 시 `JOIN` 쿼리를 직접 작성하여 N+1 문제 방지
-
-### 인증·인가 구조
-
-Spring Security의 필터 체인 대신, MVC 인터셉터를 사용해 요청 흐름을 단순화했습니다.
-
-* `LoginCheckInterceptor`: 인증 여부 검증
-* `RoleCheckInterceptor`: URL 패턴 기준 권한 검증 (`/admin/**` 등)
-* 권한 부족 시 `403 Forbidden` 응답 처리
-
-### 계층 분리 및 DTO 설계
-
-* Controller / Service / Repository 역할 분리
-* Request DTO와 Response DTO를 분리하여 View와 내부 로직 간 의존성 최소화
+### 계층 분리 및 DTO 책임 할당
+* Controller, Service, Repository의 명확한 레이어 분리
+* Request / Response DTO를 철저히 분리하여 View 계층과 도메인 비즈니스 로직 간의 결합도 최소화
 
 ---
 
@@ -132,4 +111,3 @@ erDiagram
         bigint user_id FK
         varchar content
     }
-```
