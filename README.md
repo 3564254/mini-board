@@ -21,7 +21,7 @@ JPA와 Spring Security를 사용하지 않고, **JDBC 기반 데이터 접근과
 
 ## Service Access
 
-* URL: [http://3.35.209.240:8080](http://3.35.209.240:8080)
+* URL: (중단)
 * ADMIN
 
   * ID: `admin1`
